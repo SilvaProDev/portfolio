@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Sélection des éléments
     const navLinks = document.querySelectorAll('header nav a');
     const logoLink = document.querySelector('.logo');
@@ -15,21 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialisation
     initPage();
 
-    // Fonction d'initialisation
     function initPage() {
-        // Active la première section par défaut
         activateSection(0);
-        
-        // Ajoute les écouteurs d'événements
         setupEventListeners();
     }
 
-    // Configuration des écouteurs d'événements
     function setupEventListeners() {
-        // Menu mobile
         menuIcon.addEventListener('click', toggleMobileMenu);
 
-        // Navigation par liens
         navLinks.forEach((link, index) => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -39,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Logo click
         logoLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (!isAnimating && currentSectionIndex !== 0) {
@@ -47,36 +39,59 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Gestion du scroll
-        window.addEventListener('wheel', handleScroll, { passive: false });
+        // Scroll section par section uniquement sur desktop
+        if (!isMobile()) {
+            window.addEventListener('wheel', handleScroll, { passive: false });
+        } else {
+            // Sur mobile, gestion du swipe
+            let touchStartY = 0;
+            let touchEndY = 0;
+
+            window.addEventListener('touchstart', (e) => {
+                touchStartY = e.changedTouches[0].screenY;
+            });
+
+            window.addEventListener('touchend', (e) => {
+                touchEndY = e.changedTouches[0].screenY;
+                handleTouchScroll();
+            });
+
+            function handleTouchScroll() {
+                if (isAnimating) return;
+
+                const deltaY = touchStartY - touchEndY;
+                let newIndex = currentSectionIndex;
+
+                if (deltaY > 50 && currentSectionIndex < sections.length - 1) {
+                    newIndex++;
+                } else if (deltaY < -50 && currentSectionIndex > 0) {
+                    newIndex--;
+                }
+
+                if (newIndex !== currentSectionIndex) {
+                    navigateToSection(newIndex);
+                }
+            }
+        }
     }
 
-    // Navigation entre sections
     function navigateToSection(index) {
         if (isAnimating) return;
-        
+
         isAnimating = true;
         currentSectionIndex = index;
 
-        // Animation de transition
         startTransitionAnimation(() => {
             activateSection(index);
             isAnimating = false;
         });
     }
 
-    // Animation de transition entre sections
     function startTransitionAnimation(callback) {
-        // Masque le contenu
         header.classList.remove('active');
         barsBox.classList.remove('active');
-        
-        // Désactive toutes les sections
-        sections.forEach(section => {
-            section.classList.remove('active');
-        });
+        sections.forEach(section => section.classList.remove('active'));
 
-        // Réactive après un délai
         setTimeout(() => {
             header.classList.add('active');
             barsBox.classList.add('active');
@@ -84,26 +99,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 800);
     }
 
-    // Activation d'une section spécifique
     function activateSection(index) {
-        // Met à jour la navigation
         navLinks.forEach(link => link.classList.remove('active'));
         navLinks[index].classList.add('active');
 
-        // Active la section
+        sections.forEach(section => section.classList.remove('active'));
         sections[index].classList.add('active');
 
-        // Scroll vers le haut de la section
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
 
-        // Ferme le menu mobile si ouvert
         closeMobileMenu();
     }
 
-    // Gestion du menu mobile
     function toggleMobileMenu() {
         menuIcon.classList.toggle('bx-x');
         navBar.classList.toggle('active');
@@ -114,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function() {
         navBar.classList.remove('active');
     }
 
-    // Gestion du scroll
     function handleScroll(e) {
         if (isAnimating) {
             e.preventDefault();
@@ -125,10 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let newIndex = currentSectionIndex;
 
         if (delta > 0 && currentSectionIndex < sections.length - 1) {
-            // Scroll vers le bas
             newIndex = currentSectionIndex + 1;
         } else if (delta < 0 && currentSectionIndex > 0) {
-            // Scroll vers le haut
             newIndex = currentSectionIndex - 1;
         }
 
@@ -146,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', () => {
             resumeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             resumeDetails.forEach(detail => detail.classList.remove('active'));
             resumeDetails[idx].classList.add('active');
         });
@@ -160,17 +167,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function updatePortfolio() {
         const imgSlide = document.querySelector('.portfolio-carousel .img-slide');
         const portfolioDetails = document.querySelectorAll('.portfolio-detail');
-        
+
         imgSlide.style.transform = `translateX(calc(${carouselIndex * -100}% - ${carouselIndex * 2}rem))`;
 
         portfolioDetails.forEach(detail => detail.classList.remove('active'));
         portfolioDetails[carouselIndex].classList.add('active');
-        
+
         arrowLeft.classList.toggle('disabled', carouselIndex === 0);
         arrowRight.classList.toggle('disabled', carouselIndex === 4);
     }
 
-    // Initialisation du carousel
     updatePortfolio();
 
     arrowRight.addEventListener('click', () => {
@@ -186,4 +192,9 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePortfolio();
         }
     });
+
+    // Détection mobile
+    function isMobile() {
+        return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
 });
