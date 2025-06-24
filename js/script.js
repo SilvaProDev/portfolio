@@ -1,127 +1,189 @@
-const navLinks = document.querySelectorAll('header nav a');
-const logLink = document.querySelector('.logo');
-const sections = document.querySelectorAll('section');
-const menuIcon = document.querySelector('#menu-icon');
-const navBar = document.querySelector('header nav');
-
-// Menu mobile
-menuIcon.addEventListener('click', () => {
-    menuIcon.classList.toggle('bx-x');
-    navBar.classList.toggle('active');
-});
-
-// Gestion des pages actives
-const activePage = () => {
-    const header = document.querySelector('header');
+document.addEventListener('DOMContentLoaded', function() {
+    // Sélection des éléments
+    const navLinks = document.querySelectorAll('header nav a');
+    const logoLink = document.querySelector('.logo');
+    const sections = document.querySelectorAll('section');
+    const menuIcon = document.querySelector('#menu-icon');
+    const navBar = document.querySelector('header nav');
     const barsBox = document.querySelector('.bars-box');
+    const header = document.querySelector('header');
 
-    header.classList.remove('active');
-    setTimeout(() => {
-        header.classList.add('active');
-    }, 1100);
+    // Variables d'état
+    let currentSectionIndex = 0;
+    let isAnimating = false;
 
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-    });
-    
-    barsBox.classList.remove('active');
-    setTimeout(() => {
-        barsBox.classList.add('active');
-    }, 1100);
+    // Initialisation
+    initPage();
 
-    sections.forEach(section => {
-        section.classList.remove('active');
-    });
-}
-
-// Navigation par liens
-navLinks.forEach((link, idx) => {
-    link.addEventListener('click', () => {
-        if (!link.classList.contains('active')) {
-            activePage();
-            link.classList.add('active');
-            setTimeout(() => {
-                sections[idx].classList.add('active');
-            }, 1100);
-        }
+    // Fonction d'initialisation
+    function initPage() {
+        // Active la première section par défaut
+        activateSection(0);
         
-        // Fermer le menu mobile après clic
-        if (navBar.classList.contains('active')) {
-            menuIcon.classList.remove('bx-x');
-            navBar.classList.remove('active');
-        }
-    });
-});
-
-// Logo click
-logLink.addEventListener('click', () => {
-    if (!navLinks[0].classList.contains('active')) {
-        activePage();
-        navLinks[0].classList.add('active');
-        setTimeout(() => {
-            sections[0].classList.add('active');
-        }, 1100);
+        // Ajoute les écouteurs d'événements
+        setupEventListeners();
     }
-    
-    // Fermer le menu mobile après clic
-    if (navBar.classList.contains('active')) {
+
+    // Configuration des écouteurs d'événements
+    function setupEventListeners() {
+        // Menu mobile
+        menuIcon.addEventListener('click', toggleMobileMenu);
+
+        // Navigation par liens
+        navLinks.forEach((link, index) => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!isAnimating && currentSectionIndex !== index) {
+                    navigateToSection(index);
+                }
+            });
+        });
+
+        // Logo click
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!isAnimating && currentSectionIndex !== 0) {
+                navigateToSection(0);
+            }
+        });
+
+        // Gestion du scroll
+        window.addEventListener('wheel', handleScroll, { passive: false });
+    }
+
+    // Navigation entre sections
+    function navigateToSection(index) {
+        if (isAnimating) return;
+        
+        isAnimating = true;
+        currentSectionIndex = index;
+
+        // Animation de transition
+        startTransitionAnimation(() => {
+            activateSection(index);
+            isAnimating = false;
+        });
+    }
+
+    // Animation de transition entre sections
+    function startTransitionAnimation(callback) {
+        // Masque le contenu
+        header.classList.remove('active');
+        barsBox.classList.remove('active');
+        
+        // Désactive toutes les sections
+        sections.forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // Réactive après un délai
+        setTimeout(() => {
+            header.classList.add('active');
+            barsBox.classList.add('active');
+            if (callback) callback();
+        }, 800);
+    }
+
+    // Activation d'une section spécifique
+    function activateSection(index) {
+        // Met à jour la navigation
+        navLinks.forEach(link => link.classList.remove('active'));
+        navLinks[index].classList.add('active');
+
+        // Active la section
+        sections[index].classList.add('active');
+
+        // Scroll vers le haut de la section
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+        // Ferme le menu mobile si ouvert
+        closeMobileMenu();
+    }
+
+    // Gestion du menu mobile
+    function toggleMobileMenu() {
+        menuIcon.classList.toggle('bx-x');
+        navBar.classList.toggle('active');
+    }
+
+    function closeMobileMenu() {
         menuIcon.classList.remove('bx-x');
         navBar.classList.remove('active');
     }
-});
 
-// Section Resume
-const resumeBtns = document.querySelectorAll('.resume-btn');
-const resumeDetails = document.querySelectorAll('.resume-detail');
+    // Gestion du scroll
+    function handleScroll(e) {
+        if (isAnimating) {
+            e.preventDefault();
+            return;
+        }
 
-resumeBtns.forEach((btn, idx) => {
-    btn.addEventListener('click', () => {
-        resumeBtns.forEach(btn => {
-            btn.classList.remove('active');
+        const delta = Math.sign(e.deltaY);
+        let newIndex = currentSectionIndex;
+
+        if (delta > 0 && currentSectionIndex < sections.length - 1) {
+            // Scroll vers le bas
+            newIndex = currentSectionIndex + 1;
+        } else if (delta < 0 && currentSectionIndex > 0) {
+            // Scroll vers le haut
+            newIndex = currentSectionIndex - 1;
+        }
+
+        if (newIndex !== currentSectionIndex) {
+            e.preventDefault();
+            navigateToSection(newIndex);
+        }
+    }
+
+    // Section Resume
+    const resumeBtns = document.querySelectorAll('.resume-btn');
+    const resumeDetails = document.querySelectorAll('.resume-detail');
+
+    resumeBtns.forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+            resumeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            resumeDetails.forEach(detail => detail.classList.remove('active'));
+            resumeDetails[idx].classList.add('active');
         });
-        btn.classList.add('active');
+    });
+
+    // Portfolio Carousel
+    const arrowRight = document.querySelector('.portfolio-box .navigation .arrow-right');
+    const arrowLeft = document.querySelector('.portfolio-box .navigation .arrow-left');
+    let carouselIndex = 0;
+
+    function updatePortfolio() {
+        const imgSlide = document.querySelector('.portfolio-carousel .img-slide');
+        const portfolioDetails = document.querySelectorAll('.portfolio-detail');
         
-        resumeDetails.forEach(detail => {
-            detail.classList.remove('active');
-        });
-        resumeDetails[idx].classList.add('active');
-    });
-});
+        imgSlide.style.transform = `translateX(calc(${carouselIndex * -100}% - ${carouselIndex * 2}rem))`;
 
-// Portfolio Carousel
-const arrowRight = document.querySelector('.portfolio-box .navigation .arrow-right');
-const arrowLeft = document.querySelector('.portfolio-box .navigation .arrow-left');
-let index = 0;
-
-const activePortfolio = () => {
-    const imgSlide = document.querySelector('.portfolio-carousel .img-slide');
-    const portfolioDetails = document.querySelectorAll('.portfolio-detail');
-    
-    imgSlide.style.transform = `translateX(calc(${index * -100}% - ${index * 2}rem))`;
-
-    portfolioDetails.forEach(detail => {
-        detail.classList.remove('active');
-    });
-    portfolioDetails[index].classList.add('active');
-    
-    // Gestion des flèches désactivées
-    arrowLeft.classList.toggle('disabled', index === 0);
-    arrowRight.classList.toggle('disabled', index === 4);
-}
-
-// Initialisation des flèches
-activePortfolio();
-
-arrowRight.addEventListener('click', () => {
-    if (index < 4) {
-        index++;
-        activePortfolio();
+        portfolioDetails.forEach(detail => detail.classList.remove('active'));
+        portfolioDetails[carouselIndex].classList.add('active');
+        
+        arrowLeft.classList.toggle('disabled', carouselIndex === 0);
+        arrowRight.classList.toggle('disabled', carouselIndex === 4);
     }
-});
 
-arrowLeft.addEventListener('click', () => {
-    if (index > 0) {
-        index--;
-        activePortfolio();
-    }
+    // Initialisation du carousel
+    updatePortfolio();
+
+    arrowRight.addEventListener('click', () => {
+        if (carouselIndex < 4) {
+            carouselIndex++;
+            updatePortfolio();
+        }
+    });
+
+    arrowLeft.addEventListener('click', () => {
+        if (carouselIndex > 0) {
+            carouselIndex--;
+            updatePortfolio();
+        }
+    });
 });
