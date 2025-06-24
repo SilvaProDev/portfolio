@@ -118,12 +118,13 @@ section {
   visibility: hidden;
   opacity: 0;
 }
-html, body {
+html,
+body {
   height: 100%;
   overflow-x: hidden; /* Désactive le défilement horizontal si besoin */
   overflow-y: auto; /* Autorise le défilement vertical */
 }
-section.active { 
+section.active {
   visibility: visible;
   opacity: 1;
   overflow: auto;
@@ -226,7 +227,7 @@ section.active {
   margin: 0 0.8rem;
 }
 .home-detail .btn-sci .sci a:hover {
-  /* background: var(--main-color); */
+  background: var(--main-color);
   columns: var(--bg-color);
 }
 .home-img .img-box {
@@ -283,10 +284,11 @@ section.active {
   object-fit: cover;
   mix-blend-mode: lighten;
 }
-.services-container .services-box ul li{
+.services-container .services-box ul li {
   font-size: 14px;
+  list-style: none;
 }
- .services-box ul li{
+.services-box ul li {
   font-size: 14px;
 }
 /* mes service */
